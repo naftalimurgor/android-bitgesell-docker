@@ -54,22 +54,52 @@ cd /opt/android-sdk-linux/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64
 
 ln -s llvm-ar aarch64-linux-android-ar
 ln -s llvm-ranlib aarch64-linux-android-ranlib
+Add deps for `libqrencode` lib:
 
+apt update
+apt install libtool automake autoconf gettext libtool-bin \
+                 libsdl1.2-dev libiconv-hook-dev util-linux
+```
+
+1. Cross compile libs:
+```sh
+/work
 make -C depends/
 ```
 
 The cross-compiled libs for Android are :
 ```sh
-- libevent
-- libboost
-- qt- base, tools, translations
-- libqrencode
+-  boost libevent zlib qt qrencode bdb miniupnpc zeromq
 ```
 
 Note: `make -C depends` needs faster internet connection as `curl` times out forcing redownload from `https://bglcore/depends` which doesn't have any of the packages.
 
-To clean up:
+Note: To clean up:
 
 ```sh
 make -C depends/ clean #cleans up the dependencies
 ```
+
+> Patching build-aux/m4/ax_boost_base.m4 for `aarch64-linux-android`:
+
+```sh
+sed -i '/AS_CASE(\[\${host_cpu}\],/a\      [aarch64],[multiarch_libsubdir="lib/aarch64-linux-android"],' build-aux/m4/ax_boost_base.m4
+```
+
+2. Run `./autogen.sh` to generate all the necessary config files:
+
+```sh
+./autogen.sh
+```
+
+3. `./configure` to generate Make file:
+
+```sh
+./configure \
+  --host=aarch64-linux-android \
+  --prefix=/work/depends/aarch64-linux-android \
+  --with-boost=/work/depends/aarch64-linux-android \
+  --with-boost-libdir=/work/depends/aarch64-linux-android/lib
+
+```
+
