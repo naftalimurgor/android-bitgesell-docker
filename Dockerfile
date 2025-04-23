@@ -1,63 +1,22 @@
-# Base image
-FROM ubuntu:20.04
+ARG SDK_VERSION=28
+ARG NDK_VERSION=25.2.9519653
+ARG BUILDTOOLS_VERSION=28.0.3
 
-# Metadata
-LABEL maintainer="yourname@example.com"
+FROM androidsdk/android-${SDK_VERSION}
 
-# Set environment variables
-ENV DEBIAN_FRONTEND=noninteractive
-ENV ANDROID_HOME=/opt/android-sdk
-ENV PATH="${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools"
+ARG SDK_VERSION
+ARG NDK_VERSION
+ARG BUILDTOOLS_VERSION
 
-# Install dependencies including stable OpenJDK 17
-RUN apt-get update && \
-    apt-get install -y \
-    wget curl unzip git build-essential \
-    autoconf automake libtool pkg-config \
-    openjdk-17-jdk \
-    python3 python3-pip && \
-    apt-get clean
+RUN sdkmanager --install "ndk;${NDK_VERSION}"
+RUN sdkmanager --install "build-tools;${BUILDTOOLS_VERSION}"
 
-# (Optional) confirm Java version for sdkmanager compatibility
-RUN java -version
+# ANDROID_SDK is already set to /opt/android-sdk-linux
+ENV ANDROID_NDK="${ANDROID_SDK}/ndk/${NDK_VERSION}"
+ENV ANDROID_TOOLCHAIN_BIN="${ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin"
+ENV ANDROID_API_LEVEL="${SDK_VERSION}"
+ENV HOST="aarch64-linux-android"
 
-# Download and extract Android command line tools
-RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
-    cd ${ANDROID_HOME}/cmdline-tools && \
-    wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip && \
-    unzip -q commandlinetools-linux-11076708_latest.zip && \
-    rm commandlinetools-linux-11076708_latest.zip && \
-    mv cmdline-tools latest
-
-# Set environment variable for sdkmanager to work properly
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-
-# Accept all SDK licenses and update tools
-RUN yes | sdkmanager --sdk_root=${ANDROID_HOME} --licenses && \
-    sdkmanager --sdk_root=${ANDROID_HOME} --update
-
-# Install SDK components (updated versions + non-interactive)
-ENV SDK_VERSION=34
-ENV BUILDTOOLS_VERSION=34.0.0
-ENV NDK_VERSION=25.2.9519653
-
-RUN yes | sdkmanager --sdk_root=${ANDROID_HOME} \
-    "platform-tools" \
-    "platforms;android-${SDK_VERSION}" \
-    "build-tools;${BUILDTOOLS_VERSION}" \
-    "ndk;${NDK_VERSION}"
-
-# Optional: Qt for Android (commented out)
-# ENV QT_VERSION=5.13.2
-# ENV QT_DIR=/opt/qt
-# RUN mkdir -p ${QT_DIR} && \
-#     cd ${QT_DIR} && \
-#     wget -q https://download.qt.io/archive/qt/5.13/${QT_VERSION}/android/qt-opensource-linux-${QT_VERSION}.tar.xz && \
-#     tar -xf qt-opensource-linux-${QT_VERSION}.tar.xz && \
-#     rm qt-opensource-linux-${QT_VERSION}.tar.xz
-
-# Set working directory
-WORKDIR /workspace
-
-# Default command
-CMD ["/bin/bash"]
+RUN apt-get update
+RUN apt-get install -y autoconf automake libtool make pkg-config
+RUN apt-get install -y gradle
