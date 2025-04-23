@@ -58,13 +58,13 @@ Add deps for `libqrencode` lib:
 
 apt update
 apt install libtool automake autoconf gettext libtool-bin \
-                 libsdl1.2-dev libiconv-hook-dev util-linux
+                 libsdl1.2-dev libiconv-hook-dev bsdmain-utils
 ```
 
 1. Cross compile libs:
 ```sh
 /work
-make -C depends/
+make -C depends/ HOST=aarch64-linux-android
 ```
 
 The cross-compiled libs for Android are :
@@ -72,7 +72,7 @@ The cross-compiled libs for Android are :
 -  boost libevent zlib qt qrencode bdb miniupnpc zeromq
 ```
 
-Note: `make -C depends` needs faster internet connection as `curl` times out forcing redownload from `https://bglcore/depends` which doesn't have any of the packages.
+Note: `make -C depends/ HOST=aarch64-linux-android` needs faster internet connection as `curl` times out forcing redownload from `https://BGLcore.org/depends` which doesn't have any of the packages.
 
 Note: To clean up:
 
