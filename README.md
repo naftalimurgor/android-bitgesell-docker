@@ -48,17 +48,16 @@ export HOST="aarch64-linux-android"
 export ANDROID_API_LEVEL=28
 export HOST="aarch64-linux-android"
 export ANDROID_TOOLCHAIN_BIN="$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin"
-yes | sdkmanager --install "ndk;21.4.7075529"
-export ANDROID_NDK=/opt/android-sdk-linux/ndk/21.4.7075529
+sdkmanager --install "ndk;25.2.9519653"
 cd /opt/android-sdk-linux/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin
 
 ln -s llvm-ar aarch64-linux-android-ar
 ln -s llvm-ranlib aarch64-linux-android-ranlib
-Add deps for `libqrencode` lib:
+#Add deps for `libqrencode` lib:
 
 apt update
 apt install libtool automake autoconf gettext libtool-bin \
-                 libsdl1.2-dev libiconv-hook-dev bsdmain-utils
+                 libsdl1.2-dev libiconv-hook-dev bsdmainutils
 ```
 
 1. Cross compile libs:
@@ -92,14 +91,60 @@ sed -i '/AS_CASE(\[\${host_cpu}\],/a\      [aarch64],[multiarch_libsubdir="lib/a
 ./autogen.sh
 ```
 
-3. `./configure` to generate Make file:
+3. Set the correct C++ compiler for current session:
 
 ```sh
-./configure \
-  --host=aarch64-linux-android \
-  --prefix=/work/depends/aarch64-linux-android \
-  --with-boost=/work/depends/aarch64-linux-android \
-  --with-boost-libdir=/work/depends/aarch64-linux-android/lib
+export API=28
+export TOOLCHAIN=/opt/android-sdk-linux/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin
+
+export CC=$TOOLCHAIN/aarch64-linux-android${API}-clang
+export CXX=$TOOLCHAIN/aarch64-linux-android${API}-clang++
+export AR=$TOOLCHAIN/llvm-ar
+export RANLIB=$TOOLCHAIN/llvm-ranlib
+export STRIP=$TOOLCHAIN/llvm-strip
 
 ```
 
+Symlink boost libs to `aarch-64-android` directory:
+
+```sh
+mkdir -p /work/depends/aarch64-linux-android/lib/aarch64-linux-android
+cd /work/depends/aarch64-linux-android/lib/aarch64-linux-android
+ln -s ../libboost_* .
+
+```
+
+Set boost paths for ./configure to detect:
+```sh
+export BOOST_ROOT=/work/depends/aarch64-linux-android
+export BOOST_INCLUDEDIR=$BOOST_ROOT/include
+export BOOST_LIBRARYDIR=$BOOST_ROOT/lib
+export BOOST_THREAD_USE_LIB=1
+export CXXFLAGS="-DBOOST_THREAD_USE_LIB=1"
+export LDFLAGS="-latomic"
+
+```
+
+Patch `Config.ac` to Disable `Boost Sleep not found` to prevent alt of ./configure flow
+
+```sh
+ sed -i '31049s/as_fn_error .*$/echo "WARNING: Boost sleep not found, continuing anyway..."/' configure
+
+```
+4. `./configure` to generate Make file:
+
+```sh
+./configure --host=${HOST} --prefix=/work/depends/${HOST}   --disable-bench   --disable-gui-tests   --disable-tests   --with-wallet
+```
+
+5. `make -j $(nproc)`
+Run make
+
+```sh
+make -j 8
+```
+
+6. Build apk 
+
+```sh
+```
