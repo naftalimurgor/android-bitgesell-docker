@@ -49,8 +49,7 @@ export ANDROID_API_LEVEL=28
 export HOST="aarch64-linux-android"
 export ANDROID_TOOLCHAIN_BIN="$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin"
 sdkmanager --install "ndk;25.2.9519653"
-cd /opt/android-sdk-linux/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin
-
+cd $ANDROID_TOOLCHAIN_BIN
 ln -s llvm-ar aarch64-linux-android-ar
 ln -s llvm-ranlib aarch64-linux-android-ranlib
 #Add deps for `libqrencode` lib:
@@ -66,6 +65,22 @@ apt install libtool automake autoconf gettext libtool-bin \
 make -C depends/ HOST=aarch64-linux-android
 ```
 
+which outputs:
+
+```sh
+....
+/bin/mkdir -p '/work/depends/work/staging/aarch64-linux-android/zeromq/4.3.1-559e011f607/work/depends/aarch64-linux-android/include'
+/usr/bin/install -c -m 644 include/zmq.h include/zmq_utils.h '/work/depends/work/staging/aarch64-linux-android/zeromq/4.3.1-559e011f607/work/depends/aarch64-linux-android/include'
+/bin/mkdir -p '/work/depends/work/staging/aarch64-linux-android/zeromq/4.3.1-559e011f607/work/depends/aarch64-linux-android/lib/pkgconfig'
+/usr/bin/install -c -m 644 src/libzmq.pc '/work/depends/work/staging/aarch64-linux-android/zeromq/4.3.1-559e011f607/work/depends/aarch64-linux-android/lib/pkgconfig'
+make[1]: Leaving directory '/work/depends/work/build/aarch64-linux-android/zeromq/4.3.1-559e011f607'
+Postprocessing zeromq...
+Caching zeromq...
+copying packages: boost libevent zlib qt qrencode bdb miniupnpc zeromq
+to: /work/depends/aarch64-linux-android
+make: Leaving directory '/work/depends'
+
+```
 The cross-compiled libs for Android are :
 ```sh
 -  boost libevent zlib qt qrencode bdb miniupnpc zeromq
