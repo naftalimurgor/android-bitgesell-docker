@@ -162,4 +162,14 @@ make -j 8
 6. Build apk 
 
 ```sh
+make -C src/qt apk
 ```
+
+apks will be output to:
+
+```sh
+src/qt/android/build/outputs/apk/release/android-release-unsigned.apk
+src/qt/android/build/outputs/apk/debug/android-debug.apk
+```
+
+Check build for a signed apk under `build/`
