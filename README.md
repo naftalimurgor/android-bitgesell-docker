@@ -1,8 +1,8 @@
 # android-bitgesell-docker
 
 ## Notes
-- Uses `NDK version 23.1.7779620`
-- Works with old `libc++` version and `Qt 5.13x`
+- Uses `NDK version =21.4.7075529
+- Works with `libc++` version and `Qt 5.13x`
 
 
 ## 1. Build environment setup for Android
@@ -47,8 +47,9 @@ Set up a few variables:
 export HOST="aarch64-linux-android"
 export ANDROID_API_LEVEL=28
 export HOST="aarch64-linux-android"
-export ANDROID_TOOLCHAIN_BIN="$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin"
-sdkmanager --install "ndk;25.2.9519653"
+export ANDROID_NDK="/opt/android-sdk-linux/ndk/21.4.7075529"
+export ANDROID_TOOLCHAIN_BIN="${ANDROID_NDK}/toolchains/llvm/prebuilt/linux-x86_64/bin"
+
 cd $ANDROID_TOOLCHAIN_BIN
 ln -s llvm-ar aarch64-linux-android-ar
 ln -s llvm-ranlib aarch64-linux-android-ranlib
@@ -149,17 +150,106 @@ Patch `Config.ac` to Disable `Boost Sleep not found` to prevent alt of ./configu
 4. `./configure` to generate Make file:
 
 ```sh
-./configure --host=${HOST} --prefix=/work/depends/${HOST}   --disable-bench   --disable-gui-tests   --disable-tests   --with-wallet
+CXXFLAGS="-DHAVE_WORKING_BOOST_SLEEP" ./configure \
+  --host=${HOST} \
+  --prefix=/work/depends/${HOST} \
+  --disable-bench \
+  --disable-gui-tests \
+  --disable-tests \
+  --disable-wallet \
+  --with-boost-libdir=/work/depends/${HOST}/lib
+```
+
+`-DHAVE_WORKING_BOOST_SLEEP` flag propagates the `#define HAVE_WORKING_BOOST_SLEEP` macro to the compiler.
+
+
+Upon sucess should output:
+```sh
+-long-long -Wno-overlength-strings -fvisibility=hidden -O3
+  CPPFLAGS            = -I/work/depends/aarch64-linux-android/share/../include/ 
+  LDFLAGS             = -L/work/depends/aarch64-linux-android/share/../lib -Wl,--exclude-libs=ALL -lc
+
+
+Options used to compile and link:
+  with wallet   = no
+  with gui / qt = yes
+    with qr     = no
+  with zmq      = yes
+  with test     = no
+  with bench    = no
+  with upnp     = no
+  use asm       = yes
+  sanitizers    = 
+  debug enabled = no
+  gprof enabled = no
+  werror        = no
+
+  target os     = android
+  build os      = 
+
+  CC            = /opt/android-sdk-linux/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang
+  CFLAGS        = --sysroot=/opt/android-sdk-linux/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/sysroot
+  CPPFLAGS      =   -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 -I/work/depends/aarch64-linux-android/share/../include/  -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS
+  CXX           = /opt/android-sdk-linux/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++ -std=c++11
+  CXXFLAGS      =   -Wstack-protector -fstack-protector-all     -DHAVE_WORKING_BOOST_SLEEP
+  LDFLAGS       = -pthread  -Wl,-z,relro -Wl,-z,now -pie  -L/work/depends/aarch64-linux-android/share/../lib -Wl,--exclude-libs=ALL -lc
+  ARFLAGS       = cr
+
 ```
 
 5. `make -j $(nproc)`
 Run make
 
+Set flags for `lpthread` library for linker to link:
+
+```sh
+export LDFLAGS="-L$ANDROID_NDK/platforms/android-21/arch-arm64/usr/lib -lc++_static"
+export LDFLAGS="-L$ANDROID_NDK/platforms/android-21/arch-arm64/usr/lib -pthread"
+nm $ANDROID_NDK/platforms/android-21/arch-arm64/usr/lib/libc.a | grep pthread
+```
+
 ```sh
 make -j 8
 ```
 
-6. Build apk 
+Should output:
+
+```sh
+root@fc88f2344529:/work# make -j8
+Making all in src
+make[1]: Entering directory '/work/src'
+make[2]: Entering directory '/work/src'
+make[3]: Entering directory '/work'
+make[3]: Leaving directory '/work'
+  CXX      qt/qt_BGL_qt-main.o
+  CXX      qt/qt_libBGLqt_a-bantablemodel.o
+  CXX      qt/qt_libBGLqt_a-BGL.o
+  CXX      qt/qt_libBGLqt_a-BGLaddressvalidator.o
+  CXX      qt/qt_libBGLqt_a-BGLamountfield.o
+  CXX      qt/qt_libBGLqt_a-BGLunits.o
+  CXX      qt/qt_libBGLqt_a-BGLgui.o
+  CXX      qt/qt_libBGLqt_a-clientmodel.o
+  CXX      qt/qt_libBGLqt_a-csvmodelwriter.o
+  CXX      qt/qt_libBGLqt_a-guiutil.o
+  CXX      qt/qt_libBGLqt_a-intro.o
+  CXX      qt/qt_libBGLqt_a-modaloverlay.o
+  CXX      qt/qt_libBGLqt_a-networkstyle.o
+  CXX      qt/qt_libBGLqt_a-notificator.o
+  CXX      qt/qt_libBGLqt_a-optionsdialog.o
+  CXX      qt/qt_libBGLqt_a-optionsmodel.o
+  CXX      qt/qt_libBGLqt_a-peertablemodel.o
+  CXX      qt/qt_libBGLqt_a-platformstyle.o
+  CXX      qt/qt_libBGLqt_a-qvalidatedlineedit.o
+  CXX      qt/qt_libBGLqt_a-qvaluecombobox.o
+  CXX      qt/qt_libBGLqt_a-rpcconsole.o
+  CXX      qt/qt_libBGLqt_a-splashscreen.o
+  CXX      qt/qt_libBGLqt_a-trafficgraphwidget.o
+  CXX      qt/qt_libBGLqt_a-utilitydialog.o
+  CXX      qt/qt_libBGLqt_a-moc_addressbookpage.o
+...
+```
+
+6. Build the BGL-qt GUI apk 
 
 ```sh
 make -C src/qt apk
