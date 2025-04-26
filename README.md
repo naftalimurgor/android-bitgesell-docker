@@ -65,6 +65,7 @@ apt install libtool automake autoconf gettext libtool-bin \
 /work
 make -C depends/ HOST=aarch64-linux-android
 ```
+Note: ensure you provide platform triplet i.e `aarch64-linux-android`  for 64-bit ARM architecture for Linux.
 
 which outputs:
 
@@ -150,14 +151,20 @@ Patch `Config.ac` to Disable `Boost Sleep not found` to prevent alt of ./configu
 4. `./configure` to generate Make file:
 
 ```sh
-CXXFLAGS="-DHAVE_WORKING_BOOST_SLEEP" ./configure \
+LDFLAGS="-L$ANDROID_NDK/platforms/android-21/arch-arm64/usr/lib -lc" \
+CXXFLAGS="-DHAVE_WORKING_BOOST_SLEEP" \
+./configure \
   --host=${HOST} \
   --prefix=/work/depends/${HOST} \
   --disable-bench \
   --disable-gui-tests \
   --disable-tests \
   --disable-wallet \
-  --with-boost-libdir=/work/depends/${HOST}/lib
+  --with-boost-libdir=/work/depends/${HOST}/lib \
+  --disable-pthreads \
+  --without-libzmq \
+  --without-libevent
+
 ```
 
 `-DHAVE_WORKING_BOOST_SLEEP` flag propagates the `#define HAVE_WORKING_BOOST_SLEEP` macro to the compiler.
@@ -209,7 +216,7 @@ nm $ANDROID_NDK/platforms/android-21/arch-arm64/usr/lib/libc.a | grep pthread
 ```
 
 ```sh
-make -j 8
+make HOST=aarch64-linux-android -j $(nproc)
 ```
 
 Should output:
@@ -263,3 +270,11 @@ src/qt/android/build/outputs/apk/debug/android-debug.apk
 ```
 
 Check build for a signed apk under `build/`
+
+## Roadmap
+This is highly experimental, currently the project
+
+1. Patch `libevent`, `zmq`, `boost` for Android (NDK 21, SDK 28) - DONE
+2. Cross compiling `libevent`, `zmq`, `bdb`, `qt`
+3. Linking - DONE
+4. Target `Qt 6x`: 
