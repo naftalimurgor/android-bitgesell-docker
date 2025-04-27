@@ -1,7 +1,10 @@
 # android-bitgesell-docker
+<img src="Icon.png" style="height: 60px;" />
+
+Docker setup for cross-compiling Bitgesell core for Android (SDK 28+) from a Docker container
 
 ## Notes
-- Uses `NDK version =21.4.7075529
+- Uses `NDK version = `21.4.7075529` (NDK 23 also works)
 - Works with `libc++` version and `Qt 5.13x`
 
 
