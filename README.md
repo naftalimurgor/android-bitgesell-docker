@@ -32,7 +32,7 @@ Clone the repo:
 git clone https://github.com/naftalimurgor/bitgesell.git
 cd bitgesell
 # patched for Android based on this release:
-git checkout 0.1.2 
+git checkout android-qt-patch
 
 # run the container
 docker run --rm -v $(pwd):/work --user root -it android-bitgesell /bin/bash
@@ -111,7 +111,7 @@ sed -i '/AS_CASE(\[\${host_cpu}\],/a\      [aarch64],[multiarch_libsubdir="lib/a
 ./autogen.sh
 ```
 
-3. Set the correct C++ compiler for current session:
+3. Set `clang` C++ compiler for current session:
 
 ```sh
 export API=28
@@ -145,12 +145,6 @@ export LDFLAGS="-latomic"
 
 ```
 
-Patch `Config.ac` to Disable `Boost Sleep not found` to prevent alt of ./configure flow
-
-```sh
- sed -i '31049s/as_fn_error .*$/echo "WARNING: Boost sleep not found, continuing anyway..."/' configure
-
-```
 4. `./configure` to generate Make file:
 
 ```sh
