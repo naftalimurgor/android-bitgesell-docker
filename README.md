@@ -272,6 +272,8 @@ Check build for a signed apk under `build/`
 This is highly experimental, currently the project
 
 1. Patch `libevent`, `zmq`, `boost` for Android (NDK 21, SDK 28) - DONE
-2. Cross compiling `libevent`, `zmq`, `bdb`, `qt`
+2. Cross compiling deps for andorid `libevent`, `libzmq`, `libbdb`, `libqt`, `libqrencode` - DONE
 3. Linking - DONE
-4. Target `Qt 6x`: 
+4. APK compilation- [TESTING]
+
+Target `Qt 6x` - in sync with current Bitcoin Core releases
