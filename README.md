@@ -115,7 +115,7 @@ sed -i '/AS_CASE(\[\${host_cpu}\],/a\      [aarch64],[multiarch_libsubdir="lib/a
 
 ```sh
 export API=28
-export TOOLCHAIN=/opt/android-sdk-linux/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin
+export TOOLCHAIN=/opt/android-sdk-linux/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/bin
 
 export CC=$TOOLCHAIN/aarch64-linux-android${API}-clang
 export CXX=$TOOLCHAIN/aarch64-linux-android${API}-clang++
@@ -148,7 +148,6 @@ export LDFLAGS="-latomic"
 4. `./configure` to generate Make file:
 
 ```sh
-LDFLAGS="-L$ANDROID_NDK/platforms/android-21/arch-arm64/usr/lib -lc" \
 CXXFLAGS="-DHAVE_WORKING_BOOST_SLEEP" \
 ./configure \
   --host=${HOST} \
@@ -158,7 +157,6 @@ CXXFLAGS="-DHAVE_WORKING_BOOST_SLEEP" \
   --disable-tests \
   --disable-wallet \
   --with-boost-libdir=/work/depends/${HOST}/lib \
-  --disable-pthreads \
   --without-libzmq \
   --without-libevent
 
@@ -269,11 +267,11 @@ src/qt/android/build/outputs/apk/debug/android-debug.apk
 Check build for a signed apk under `build/`
 
 ## Roadmap
-This is highly experimental, currently the project
+This is experimental, currently the project is in progress as follows:
 
 1. Patch `libevent`, `zmq`, `boost` for Android (NDK 21, SDK 28) - DONE
-2. Cross compiling deps for andorid `libevent`, `libzmq`, `libbdb`, `libqt`, `libqrencode` - DONE
+2. Cross compiling libs for Android `libevent`, `zmq`, `bdb`, `qt`
 3. Linking - DONE
-4. APK compilation- [TESTING]
+4. Android APK- [PENDING]
 
-Target `Qt 6x` - in sync with current Bitcoin Core releases
+Target is to cross-compile with `Qt 6x` in sync with the current Bitcoin core updates. See issue submitted here: 
