@@ -162,8 +162,11 @@ $(package)_config_opts_android += -L $(host_prefix)/lib
 $(package)_config_opts_android += -I $(host_prefix)/include
 $(package)_config_opts_android += -L $(ANDROID_NDK)/platforms/android-$(ANDROID_API_LEVEL)/arch-arm64/usr/lib
 $(package)_config_opts_android += -I $(ANDROID_NDK)/platforms/android-$(ANDROID_API_LEVEL)/arch-arm64/usr/include
-$(package)_config_opts_android += -plugin-import qtforandroid
+$(package)_config_opts_android += -I $(ANDROID_NDK)/sources/cxx-stl/llvm-libc++/include
+$(package)_config_opts_android += -I $(ANDROID_NDK)/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include
 $(package)_config_opts_android += -v
+$(package)_config_opts_android += -android-ndk-platform android-$(ANDROID_API_LEVEL)
+$(package)_config_opts_android += -skip qtwebengine
 
 $(package)_config_opts_aarch64_android += -android-arch arm64-v8a
 $(package)_config_opts_armv7a_android += -android-arch armeabi-v7a
@@ -237,17 +240,45 @@ define $(package)_config_cmds
   echo "host_build: QT_CONFIG ~= s/system-zlib/zlib" >> mkspecs/qconfig.pri && \
   echo "CONFIG += force_bootstrap" >> mkspecs/qconfig.pri && \
   $(MAKE) sub-src-clean && \
-  cd ../qttranslations && ../qtbase/bin/qmake qttranslations.pro -o Makefile && \
-  cd translations && ../../qtbase/bin/qmake translations.pro -o Makefile && cd ../.. && \
-  cd qttools/src/linguist/lrelease/ && ../../../../qtbase/bin/qmake lrelease.pro -o Makefile && \
-  cd ../lupdate/ && ../../../../qtbase/bin/qmake lupdate.pro -o Makefile && cd ../../../..
+  cd ../qttranslations && \
+  ../qtbase/bin/qmake qttranslations.pro -o Makefile && \
+  cd translations && \
+  ../../qtbase/bin/qmake translations.pro -o Makefile && \
+  cd ../.. && \
+  cd qttools/src/linguist/lrelease/ && \
+  ../../../../qtbase/bin/qmake lrelease.pro -o Makefile && \
+  cd ../lupdate/ && \
+  ../../../../qtbase/bin/qmake lupdate.pro -o Makefile && \
+  cd ../../../..
 endef
 
 define $(package)_build_cmds
-  $(MAKE) -C src $(addprefix sub-,$($(package)_qt_libs)) && \
-  $(MAKE) -C ../qttools/src/linguist/lrelease && \
-  $(MAKE) -C ../qttools/src/linguist/lupdate && \
-  $(MAKE) -C ../qttranslations
+  export PATH=$(build_prefix)/bin:$(PATH) && \
+  cd qtbase && \
+  if [ -f config.status ]; then \
+    ./config.status --recheck && \
+    $(MAKE) clean && \
+    cd ../qttranslations && \
+    ../qtbase/bin/qmake qttranslations.pro -o Makefile && \
+    cd ../qttools && \
+    ../qtbase/bin/qmake qttools.pro -o Makefile && \
+    cd ../qtbase && \
+    ../qtbase/bin/qmake qtbase.pro -o Makefile && \
+    $(MAKE) -j$(JOBS) && \
+    $(MAKE) -j$(JOBS) -C src/plugins/platforms/android && \
+    $(MAKE) -j$(JOBS) -C src/plugins && \
+    $(MAKE) -j$(JOBS) -C src/platformsupport/fontdatabases/freetype && \
+    $(MAKE) -j$(JOBS) -C ../qttools && \
+    $(MAKE) -j$(JOBS) -C ../qttranslations; \
+  else \
+    ./configure $($(package)_config_opts) && \
+    $(MAKE) -j$(JOBS) && \
+    $(MAKE) -j$(JOBS) -C src/plugins/platforms/android && \
+    $(MAKE) -j$(JOBS) -C src/plugins && \
+    $(MAKE) -j$(JOBS) -C src/platformsupport/fontdatabases/freetype && \
+    $(MAKE) -j$(JOBS) -C ../qttools && \
+    $(MAKE) -j$(JOBS) -C ../qttranslations; \
+  fi
 endef
 
 define $(package)_stage_cmds
@@ -255,8 +286,14 @@ define $(package)_stage_cmds
   $(MAKE) -C qttools/src/linguist/lrelease INSTALL_ROOT=$($(package)_staging_dir) install_target && \
   $(MAKE) -C qttools/src/linguist/lupdate INSTALL_ROOT=$($(package)_staging_dir) install_target && \
   $(MAKE) -C qttranslations INSTALL_ROOT=$($(package)_staging_dir) install_subtargets && \
-  if `test -f qtbase/src/plugins/platforms/xcb/xcb-static/libxcb-static.a`; then \
+  if [ -f qtbase/src/plugins/platforms/xcb/xcb-static/libxcb-static.a ]; then \
     cp qtbase/src/plugins/platforms/xcb/xcb-static/libxcb-static.a $($(package)_staging_prefix_dir)/lib; \
+  fi && \
+  if [ -f qtbase/src/plugins/platforms/android/libqtforandroid.a ]; then \
+    cp qtbase/src/plugins/platforms/android/libqtforandroid.a $($(package)_staging_prefix_dir)/lib/libplugins_platforms_qtforandroid.a; \
+  fi && \
+  if [ -f qtbase/src/platformsupport/fontdatabases/freetype/libqtfreetype.a ]; then \
+    cp qtbase/src/platformsupport/fontdatabases/freetype/libqtfreetype.a $($(package)_staging_prefix_dir)/lib/; \
   fi
 endef
 
