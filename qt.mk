@@ -160,6 +160,10 @@ $(package)_config_opts_android += -qt-freetype
 $(package)_config_opts_android += -no-fontconfig
 $(package)_config_opts_android += -L $(host_prefix)/lib
 $(package)_config_opts_android += -I $(host_prefix)/include
+$(package)_config_opts_android += -L $(ANDROID_NDK)/platforms/android-$(ANDROID_API_LEVEL)/arch-arm64/usr/lib
+$(package)_config_opts_android += -I $(ANDROID_NDK)/platforms/android-$(ANDROID_API_LEVEL)/arch-arm64/usr/include
+$(package)_config_opts_android += -plugin-import qtforandroid
+$(package)_config_opts_android += -v
 
 $(package)_config_opts_aarch64_android += -android-arch arm64-v8a
 $(package)_config_opts_armv7a_android += -android-arch armeabi-v7a
