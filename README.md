@@ -32,7 +32,7 @@ Clone the repo:
 git clone https://github.com/naftalimurgor/bitgesell.git
 cd bitgesell
 # patched for Android based on this release:
-git checkout android-qt-patch
+git checkout 0.1.13
 
 # run the container
 docker run --rm -v $(pwd):/work --user root -it android-bitgesell /bin/bash
