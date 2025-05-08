@@ -44,8 +44,6 @@ while inside the container in interractive mode,
 
 
 1. Cross compile libs:
-Install cmake:
-
 ```sh
 /work
 make -C depends/ HOST=aarch64-linux-android
@@ -97,7 +95,7 @@ sed -i '/AS_CASE(\[\${host_cpu}\],/a\      [aarch64],[multiarch_libsubdir="lib/a
 
 ```sh
 export API=28
-export TOOLCHAIN=/opt/android-sdk-linux/ndk/21.4.7075529/toolchains/llvm/prebuilt/linux-x86_64/bin
+export TOOLCHAIN=/opt/android-sdk-linux/ndk/23.1.7779620/toolchains/llvm/prebuilt/linux-x86_64/bin
 
 export CC=$TOOLCHAIN/aarch64-linux-android${API}-clang
 export CXX=$TOOLCHAIN/aarch64-linux-android${API}-clang++
