@@ -4,8 +4,8 @@
 Docker setup for cross-compiling Bitgesell core for Android (SDK 28+) from a Docker container
 
 ## Notes
-- Uses `NDK version = `21.4.7075529` (NDK 23 also works)
-- Works with `libc++` version and `Qt 5.9` (tested on this release `0.1.9`)
+- Uses `NDK version = `23` see (`Dockerfile` for more details)
+- Works with `libc++` version and `Qt 5.15.2` (tested on this release `0.1.9`)
 
 
 ## 1. Build environment setup for Android
@@ -17,13 +17,6 @@ Build the docker image from `Dockerfile`:
 docker build -t android-bitgesell .
 ```
 
-or Pull the image from the dockerhub registry
-
-```sh
-docker pull naftalimurgor/android-bitgesell
-```
-
-
 ## 2. Build Bitgesell APK 
 
 Clone the repo:
@@ -31,8 +24,8 @@ Clone the repo:
 ```sh
 git clone https://github.com/naftalimurgor/bitgesell.git
 cd bitgesell
-# patched for Android based on this release:
-git checkout 0.1.13
+# patched for Android based on this patched release:
+git checkout android-patch-0.1.9
 
 # run the container
 docker run --rm -v $(pwd):/work --user root -it android-bitgesell /bin/bash
@@ -79,12 +72,6 @@ Note: To clean up:
 make -C depends/ clean #cleans up the dependencies
 ```
 
-> Patching build-aux/m4/ax_boost_base.m4 for `aarch64-linux-android`:
-
-```sh
-sed -i '/AS_CASE(\[\${host_cpu}\],/a\      [aarch64],[multiarch_libsubdir="lib/aarch64-linux-android"],' build-aux/m4/ax_boost_base.m4
-```
-
 2. Run `./autogen.sh` to generate all the necessary config files:
 
 ```sh
@@ -123,7 +110,13 @@ Symlink qt files (with `_arm64-v8a*.a`) so the linker finds them:
 # check for unsuffixed files
 ls -l /work/depends/aarch64-linux-android/lib/libqtfreetype.a
 ls -l /work/depends/aarch64-linux-android/plugins/platforms/libplugins_platforms_qtforandroid.a
+
+```
+If these files exist, they are symlinks to the _arm64-v8a versions, and the linker should find them.
+If they don’t exist, create symlinks to match the expected names:
+
 ## symlink the libs
+```sh
 ln -s /work/depends/aarch64-linux-android/lib/libqtfreetype_arm64-v8a.a \
       /work/depends/aarch64-linux-android/lib/libqtfreetype.a
 ln -s /work/depends/aarch64-linux-android/plugins/platforms/libplugins_platforms_qtforandroid_arm64-v8a.a \
@@ -142,9 +135,6 @@ ls -l /work/depends/aarch64-linux-android/plugins/platforms/libplugins_platforms
 ```sh
 ./configure --prefix=/work/depends/aarch64-linux-android             --host=aarch64-linux-android             --with-gui=qt5             LDFLAGS="-L/work/depends/aarch64-linux-android/lib -L/work/depends/aarch64-linux-android/plugins/platforms" --disable-tests
 ```
-
-`-DHAVE_WORKING_BOOST_SLEEP` flag propagates the `#define HAVE_WORKING_BOOST_SLEEP` macro to the compiler.
-
 
 Upon sucess should output:
 ```sh
@@ -267,7 +257,31 @@ make[3]: Leaving directory '/work'
 ```sh
 make -C src/qt apk
 ```
+The above process outputs the following: 
+```sh
+Download https://jcenter.bintray.com/org/apache/httpcomponents/httpmime/4.1/httpmime-4.1.jar
+Download https://jcenter.bintray.com/org/jetbrains/annotations/13.0/annotations-13.0.jar
+Download https://jcenter.bintray.com/org/apache/httpcomponents/httpclient/4.2.6/httpclient-4.2.6.jar
+Download https://jcenter.bintray.com/com/sun/activation/javax.activation/1.2.0/javax.activation-1.2.0.jar
+Download https://jcenter.bintray.com/org/apache/httpcomponents/httpcore/4.2.5/httpcore-4.2.5.jar
+Download https://jcenter.bintray.com/net/sf/kxml/kxml2/2.3.0/kxml2-2.3.0.jar
+Download https://jcenter.bintray.com/commons-logging/commons-logging/1.1.1/commons-logging-1.1.1.jar
+Download https://jcenter.bintray.com/org/glassfish/jaxb/jaxb-core/2.2.11/jaxb-core-2.2.11.jar
+Download https://jcenter.bintray.com/org/glassfish/jaxb/jaxb-runtime/2.2.11/jaxb-runtime-2.2.11.jar
+Download https://jcenter.bintray.com/org/jvnet/staxex/stax-ex/1.7.7/stax-ex-1.7.7.jar
+Download https://jcenter.bintray.com/com/sun/xml/fastinfoset/FastInfoset/1.2.13/FastInfoset-1.2.13.jar
+Download https://jcenter.bintray.com/javax/xml/bind/jaxb-api/2.2.12-b140109.1041/jaxb-api-2.2.12-b140109.1041.jar
+Download https://jcenter.bintray.com/commons-codec/commons-codec/1.6/commons-codec-1.6.jar
+Download https://jcenter.bintray.com/org/glassfish/jaxb/txw2/2.2.11/txw2-2.2.11.jar
+Download https://jcenter.bintray.com/com/sun/istack/istack-commons-runtime/2.21/istack-commons-runtime-2.21.jar
+Download https://dl.google.com/dl/android/maven2/com/android/tools/sdk-common/26.1.0/sdk-common-26.1.0.jar
 
+BUILD SUCCESSFUL in 4m 19s
+1 actionable task: 1 executed
+cd qt/android && ./gradlew build
+Downloading https://services.gradle.org/distributions/gradle-6.6.1-bin.zip
+...
+```
 apks will be output to:
 
 ```sh
@@ -277,12 +291,21 @@ src/qt/android/build/outputs/apk/debug/android-debug.apk
 
 Check build for a signed apk under `build/`
 
+And here it is!
+
+<img src="screenshots/1.jpg" alt="Responsive Image" style="max-width: 100%; height: auto;">
+<img src="screenshots/2.jpg" alt="Responsive Image" style="max-width: 100%; height: auto;">
+<img src="screenshots/3.jpg" alt="Responsive Image" style="max-width: 100%; height: auto;">
+<img src="screenshots/4.jpg" alt="Responsive Image" style="max-width: 100%; height: auto;">
+
+
 ## Roadmap
 This is experimental, currently the project is in progress as follows:
+- [x] `make -C depends/ HOST=aarch64-linux-android`
+- [x] `./autogen.sh`
+- [x] `./configure --host=$HOST --prefix=$PWD/depends/$HOST --with-gui=qt5 --enable-glibc-back-compat --disable-bench --disable-tests`
+- [x] `make -j $(nproc)`
+- [x] `make -C src/qt apk` - builds the apk - should bundle `libbitgesell.so` and also as part of main JNI lib
 
-1. Patch `libevent`, `zmq`, `boost` for Android (NDK 21, SDK 28) - DONE
-2. Cross compiling libs for Android `libevent`, `zmq`, `bdb`, `qt`
-3. Linking - DONE
-4. Android APK- [PENDING]
 
-Target is to cross-compile with `Qt 6x` in sync with the current Bitcoin core updates. See issue submitted here: 
+Target is to cross-compile with `Qt 6x` in sync with the current Bitcoin core updates. See issue submitted here: https://github.com/bitcoin/bitcoin/issues/32254
