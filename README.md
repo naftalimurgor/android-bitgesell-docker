@@ -4,7 +4,7 @@
 Docker setup for cross-compiling Bitgesell core for Android (SDK 28+) from a Docker container
 
 ## Notes
-- Uses `NDK version = `23` see (`Dockerfile` for more details)
+- Uses `NDK` version = `23` see (`Dockerfile` for more details)
 - Works with `libc++` version and `Qt 5.15.2` (tested on this release `0.1.9`)
 
 
@@ -14,12 +14,14 @@ Docker setup for cross-compiling Bitgesell core for Android (SDK 28+) from a Doc
 Build the docker image from `Dockerfile`:
 
 ```sh
+git clone https://https://github.com/naftalimurgor/android-bitgesell-docker
+cd android-bitgesell-docker/
 docker build -t android-bitgesell .
 ```
 
 ## 2. Build Bitgesell APK 
 
-Clone the repo:
+Clone the Bitgesell repo with the Android Patch(see respective branch):
 
 ```sh
 git clone https://github.com/naftalimurgor/bitgesell.git
@@ -30,11 +32,9 @@ git checkout android-patch-0.1.9
 # run the container
 docker run --rm -v $(pwd):/work --user root -it android-bitgesell /bin/bash
 cd /work
-
 ```
 
-while inside the container in interractive mode,
-
+while inside the container in `bash` interractive mode,
 
 1. Cross compile libs:
 ```sh
@@ -43,7 +43,7 @@ make -C depends/ HOST=aarch64-linux-android
 ```
 Note: ensure you provide platform triplet i.e `aarch64-linux-android`  for 64-bit ARM architecture for Linux.
 
-which outputs:
+which outputs on success:
 
 ```sh
 ....
@@ -57,7 +57,6 @@ Caching zeromq...
 copying packages: boost libevent zlib qt qrencode bdb miniupnpc zeromq
 to: /work/depends/aarch64-linux-android
 make: Leaving directory '/work/depends'
-
 ```
 The cross-compiled libs for Android are :
 ```sh
@@ -99,13 +98,17 @@ cd depends/$HOST/lib/pkgconfig
 for f in *Qt5*_arm64-v8a.pc; do
     ln -s "$f" "${f/_arm64-v8a/}"
 done
-
+cd /work
 ```
-Also, expose `pkgconfig` path also for `./configure` to locate
+
+Also, expose `pkgconfig` path also for `./configure` to locate `PKG_CONFIG_PATH`:
+
 ```sh
 export PKG_CONFIG_PATH=$(pwd)/depends/$HOST/lib/pkgconfig
 ```
 Symlink qt files (with `_arm64-v8a*.a`) so the linker finds them:
+
+Check if files exist:
 ```sh
 # check for unsuffixed files
 ls -l /work/depends/aarch64-linux-android/lib/libqtfreetype.a
@@ -115,7 +118,8 @@ ls -l /work/depends/aarch64-linux-android/plugins/platforms/libplugins_platforms
 If these files exist, they are symlinks to the _arm64-v8a versions, and the linker should find them.
 If they don’t exist, create symlinks to match the expected names:
 
-## symlink the libs
+## Symlink the libs (`libqtfreetype_arm64-v8a` and `libplugins_platforms_qtforandroid_arm64-v8a`)
+
 ```sh
 ln -s /work/depends/aarch64-linux-android/lib/libqtfreetype_arm64-v8a.a \
       /work/depends/aarch64-linux-android/lib/libqtfreetype.a
@@ -136,7 +140,7 @@ ls -l /work/depends/aarch64-linux-android/plugins/platforms/libplugins_platforms
 ./configure --prefix=/work/depends/aarch64-linux-android             --host=aarch64-linux-android             --with-gui=qt5             LDFLAGS="-L/work/depends/aarch64-linux-android/lib -L/work/depends/aarch64-linux-android/plugins/platforms" --disable-tests
 ```
 
-Upon sucess should output:
+Upon success should output:
 ```sh
 
 Build Options:
@@ -200,16 +204,6 @@ Options used to compile and link:
 
 5. `make -j $(nproc)`
 Run make
-
-Before running make, disable `lpthread.so` linking - already included in Android `libc` library:
-
-```sh
-sed -E '/^BOOST_LIBS\s*=/c\BOOST_LIBS = -L/work/depends/aarch64-linux-android/lib -lboost_system-mt-s-a64 -lboost_filesystem-mt-s-a64 -lboost_thread-mt-s-a64 -lpthread -lboost_chrono-mt-a64' Makefile | \
-sed -E '/^BOOST_SYSTEM_LIB\s*=/c\BOOST_SYSTEM_LIB = -lboost_system-mt-s-a64' | \
-sed -E '/^BOOST_THREAD_LIB\s*=/c\BOOST_THREAD_LIB = -lboost_thread-mt-s-a64 -lpthread' | \
-tee Makefile.patched > /dev/null && mv Makefile.patched Makefile
-
-```
 
 ```sh
 make HOST=aarch64-linux-android -j $(nproc)
@@ -289,7 +283,7 @@ src/qt/android/build/outputs/apk/release/android-release-unsigned.apk
 src/qt/android/build/outputs/apk/debug/android-debug.apk
 ```
 
-Check build for a signed apk under `build/`
+Check build for sample apk files under `build/`
 
 And here it is!
 
@@ -300,6 +294,7 @@ And here it is!
 
 
 ## Roadmap
+
 This is experimental, currently the project is in progress as follows:
 - [x] `make -C depends/ HOST=aarch64-linux-android`
 - [x] `./autogen.sh`
