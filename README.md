@@ -121,8 +121,8 @@ export PKG_CONFIG_PATH=$(pwd)/depends/$HOST/lib/pkgconfig
 Symlink qt files (with `_arm64-v8a*.a`) so the linker finds them:
 ```sh
 # check for unsuffixed files
-ls -l /work/depends/aarch64-linux-android/lib/libqtfreetype_arm64-v8a.a 
-ls -l /work/depends/aarch64-linux-android/plugins/platforms/libplugins_platforms_qtforandroid_arm64-v8a.a
+ls -l /work/depends/aarch64-linux-android/lib/libqtfreetype.a
+ls -l /work/depends/aarch64-linux-android/plugins/platforms/libplugins_platforms_qtforandroid.a
 ## symlink the libs
 ln -s /work/depends/aarch64-linux-android/lib/libqtfreetype_arm64-v8a.a \
       /work/depends/aarch64-linux-android/lib/libqtfreetype.a
