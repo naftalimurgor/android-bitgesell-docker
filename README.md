@@ -114,12 +114,33 @@ for f in *Qt5*_arm64-v8a.pc; do
 done
 
 ```
+Also, expose `pkgconfig` path also for `./configure` to locate
+```sh
+export PKG_CONFIG_PATH=$(pwd)/depends/$HOST/lib/pkgconfig
+```
+Symlink qt files (with `_arm64-v8a*.a`) so the linker finds them:
+```sh
+# check for unsuffixed files
+ls -l /work/depends/aarch64-linux-android/lib/libqtfreetype_arm64-v8a.a 
+ls -l /work/depends/aarch64-linux-android/plugins/platforms/libplugins_platforms_qtforandroid_arm64-v8a.a
+## symlink the libs
+ln -s /work/depends/aarch64-linux-android/lib/libqtfreetype_arm64-v8a.a \
+      /work/depends/aarch64-linux-android/lib/libqtfreetype.a
+ln -s /work/depends/aarch64-linux-android/plugins/platforms/libplugins_platforms_qtforandroid_arm64-v8a.a \
+      /work/depends/aarch64-linux-android/plugins/platforms/libplugins_platforms_qtforandroid.a
+```
+
+Verify symlinked files:
+
+````sh
+ls -l /work/depends/aarch64-linux-android/lib/libqtfreetype*
+ls -l /work/depends/aarch64-linux-android/plugins/platforms/libplugins_platforms_qtforandroid*
+````
 
 4. `./configure` to generate Make file:
 
 ```sh
-./configure --host=$HOST --prefix=$PWD/depends/$HOST   --with-gui=qt5   --enable-glibc-back-compat   --disable-bench   --disable-tests
-
+./configure --prefix=/work/depends/aarch64-linux-android             --host=aarch64-linux-android             --with-gui=qt5             LDFLAGS="-L/work/depends/aarch64-linux-android/lib -L/work/depends/aarch64-linux-android/plugins/platforms" --disable-tests
 ```
 
 `-DHAVE_WORKING_BOOST_SLEEP` flag propagates the `#define HAVE_WORKING_BOOST_SLEEP` macro to the compiler.
